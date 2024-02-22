@@ -32,6 +32,14 @@ def record_current_answer(answer, current_question_id, session):
     '''
     Validates and stores the answer for the current question to django session.
     '''
+    if len(answer)<100:
+        False, "Use only 100 characters"
+    if not 'answers' in session:
+        session['answers']={}
+
+    session['answers'][current_question_id]=answer
+    session.save()
+
     return True, ""
 
 
@@ -39,14 +47,27 @@ def get_next_question(current_question_id):
     '''
     Fetches the next question from the PYTHON_QUESTION_LIST based on the current_question_id.
     '''
+    if current_question_id and current_question_id+1>=len(PYTHON_QUESTION_LIST):
+        return False, False
 
-    return "dummy question", -1
-
+    if current_question_id==None:
+        next_question_id = 0
+    elif current_question_id+1<len(PYTHON_QUESTION_LIST):
+        next_question_id = current_question_id+1
+    question = '{},<br> Options are : <br> {} <br> {} <br> {} <br> {}'.format(PYTHON_QUESTION_LIST[next_question_id]['question_text'],\
+    PYTHON_QUESTION_LIST[next_question_id]['options'][0],PYTHON_QUESTION_LIST[next_question_id]['options'][1],\
+    PYTHON_QUESTION_LIST[next_question_id]['options'][2],PYTHON_QUESTION_LIST[next_question_id]['options'][3])
+    return question,next_question_id
 
 def generate_final_response(session):
     '''
     Creates a final result message including a score based on the answers
     by the user for questions in the PYTHON_QUESTION_LIST.
     '''
-
-    return "dummy result"
+    number_of_questions = len(PYTHON_QUESTION_LIST)
+    score = 0
+    print(session['answers'])    
+    for question_id in range(number_of_questions):
+        if PYTHON_QUESTION_LIST[question_id]['answer'] == session['answers'][question_id]:
+            score +=1
+    return "Your results are as follows : {}/10".format(score)
